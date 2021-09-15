@@ -93,6 +93,7 @@ export default class widget_groub extends widget {
         this[_widget_sets_symbol.widget_sets_symbol][i].duty(arg,  us_timestamp);
       }
     }
+    
   }
 
   draw_background(ctx, us_timestamp) {

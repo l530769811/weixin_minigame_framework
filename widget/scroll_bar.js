@@ -19,8 +19,8 @@
   }
 
   export default class scroll_bar extends widget {
-    constructor(name, parentLayer,  arg) {
-      super(name, parentLayer,  arg);
+    constructor(name, parentLayer, arg, widget_id) {
+      super(name, parentLayer, arg, widget_id);
       this[_move_scroll_bar_zone_symbol.move_scroll_bar_zone_symbol] = {
         x: 0,
         y: 0,
@@ -146,6 +146,21 @@
       let _data = this.get_data();
       _data.set_has_scroll_range(distance);
       this._init_move_scroll_bar();
+    }
+
+    get_total_scroll_range() {
+      let _data = this.get_data();
+      return _data.get_total_scroll_range();
+    }
+
+    get_no_need_scroll_range() {
+      let _data = this.get_data();
+      return _data.get_no_need_scroll_range();
+    }
+
+    get_has_scroll_range() {
+      let _data = this.get_data();
+      return _data.get_has_scroll_range();
     }
 
     scroll_to(_scroll_distance) {

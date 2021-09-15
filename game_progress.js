@@ -25,8 +25,8 @@ class layer_data_struct{
 }
 
 export default class game_progress{
-  constructor(){
-    this[_scene_mgr_symbol.scene_mgr_symbol] = new scene_manager();
+  constructor(ctx){
+    this[_scene_mgr_symbol.scene_mgr_symbol] = new scene_manager(ctx);
     this[_action_mgr_symbol.action_mgr_symbol] =  new action_manager();
     this[_game_state_symbol.game_states] = [];
     this.pre_state = null;
@@ -73,9 +73,9 @@ export default class game_progress{
     this[_action_mgr_symbol.action_mgr_symbol].executeActions();
     
     if ( (!this.performance)==false){
-      let us_timestamp = this.performance.now();
+      let us_timestamp = this.performance.now();     
+      this[_scene_mgr_symbol.scene_mgr_symbol].duty(arg, us_timestamp);  
       
-      this[_scene_mgr_symbol.scene_mgr_symbol].duty(arg, us_timestamp);      
     }
    
   }

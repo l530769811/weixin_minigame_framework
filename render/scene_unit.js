@@ -1,16 +1,16 @@
 import layer from '../widget/layer.js'
 import log from '../log.js'
-
+import widget from '../widget/widget.js'
 export default class scene_unit extends layer {
-  constructor(name, parentDuty, on_message_callback, site) {
-    super(name, parentDuty, on_message_callback, site); 
+  constructor(name, parentDuty) {
+    super(name, parentDuty); 
   }
 
   hide() {
     let dutys = super.get_duty();
     for (var i in dutys) {
       let duty = super.get_duty(i);
-      if ((duty instanceof layer)) {
+      if ((duty instanceof widget)) {
         if (duty != null) {
           duty.hide();
         } else {
@@ -27,7 +27,7 @@ export default class scene_unit extends layer {
     let dutys = super.get_duty();
     for (var i in dutys) {
       let duty = super.get_duty(i);
-      if ((duty instanceof layer)) {
+      if ((duty instanceof widget)) {
         if (duty != null) {
           duty.show();
         } else {
@@ -40,18 +40,17 @@ export default class scene_unit extends layer {
     log(this.get_name() + ' scene show', 1);
   }
 
-  duty(arg, us_timestamp) {
-    let dutys = super.get_duty();   
-    for (var i in dutys) {
-      let duty = super.get_duty(i);
-      if (duty != null) {
-        
-        duty.duty(arg, us_timestamp);
-      }else {
-        log('scene_unit.duty() duty == null', 2);
-      }
-    }
-  }
+  //duty(arg, us_timestamp) {
+    // let dutys = super.get_duty();   
+    // for (var i in dutys) {
+    //   let tmp_duty = super.get_duty(i);
+    //   if (tmp_duty != null) {        
+    //     tmp_duty.duty(arg, us_timestamp,);
+    //   }else {
+    //     log('scene_unit.duty() duty == null', 2);
+    //   }
+    // }    
+  //}
 
   on_touch_input(e) {
     let ret = false;

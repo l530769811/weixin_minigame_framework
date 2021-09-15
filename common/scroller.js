@@ -24,15 +24,15 @@ export default class scroller {
     this[_scroll_range_symbol.scroll_range_symbol].has_scroll_range = Math.ceil(distance);
   }
 
-  get_total_scroll_range(distance) {
+  get_total_scroll_range() {
     return this[_scroll_range_symbol.scroll_range_symbol].total_range;
   }
 
-  get_no_need_scroll_range(distance) {
+  get_no_need_scroll_range() {
     return this[_scroll_range_symbol.scroll_range_symbol].no_need_scroll_range;
   }
 
-  get_has_scroll_range(distance) {
+  get_has_scroll_range() {
     return this[_scroll_range_symbol.scroll_range_symbol].has_scroll_range;
   }
 

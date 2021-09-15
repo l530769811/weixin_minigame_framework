@@ -1,5 +1,5 @@
-import animation from './animation.js'
 import log from '../../log.js'
+import queue_animation from './queue_animation.js'
 
 import number_gradient_frames from './number_gradient_frames.js'
 
@@ -7,7 +7,7 @@ const _number_frame_template_symbol = {
   number_frame_template_symbol: Symbol('number_frame_template_symbol')
 }
 
-export default class number_increase_gradient_animation extends animation {
+export default class number_increase_gradient_animation extends queue_animation {
   constructor(name,  end_number, frame_template) {
      
     let _end_number = end_number;
@@ -28,7 +28,7 @@ export default class number_increase_gradient_animation extends animation {
 
     //purpose the upsite code is calculate out the rames_count;
   
-    super(name, undefined, frames_count, least_speed);
+    super(name, undefined, frames_count);
 
 
     if (!frame_template) {

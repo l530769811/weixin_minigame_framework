@@ -107,24 +107,43 @@ export default class list_view_data extends layer_data {
     return this.get_messages_callback('on_move');
   }
 
-  on_message(id, kind, x, y) {
+  on_message(widget_object, widget_id, name, kind, x, y) {
     let call_back_fn = this.get_onmove_callback();
     switch (kind) {
       case WIDGET_TOUCH_EVENT.WTE_TouchStart:
 
         if ((!call_back_fn) == false) {
-          call_back_fn(this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchStart, x, y);
+          call_back_fn(widget_object, widget_id, this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchStart, x, y);
         } else {
           log('list_view_data.on_message() call_back_fn == false');
         }
         break;
       case WIDGET_TOUCH_EVENT.WTE_TouchEnd:
+        if ((!call_back_fn) == false) {
+          call_back_fn(widget_object, widget_id, this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchEnd, x, y);
+        } else {
+          log('list_view_data.on_message() call_back_fn == false', 2);
+        }
         break;
       case WIDGET_TOUCH_EVENT.WTE_TouchMoving:
         if ((!call_back_fn) == false) {
-          call_back_fn(this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchMoving, x, y);
+          call_back_fn(widget_object, widget_id, this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchMoving, x, y);
         } else {
           log('list_view_data.on_message() call_back_fn == false');
+        }
+        break;
+      case WIDGET_TOUCH_EVENT.WTE_TouchMoveIn:
+        if ((!call_back_fn) == false) {
+          call_back_fn(widget_object, widget_id, this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchStart, x, y);
+        } else {
+          log('pager_view_data.on_message() call_back_fn == false', 2);
+        }
+        break;
+      case WIDGET_TOUCH_EVENT.WTE_TouchMoveOut:
+        if ((!call_back_fn) == false) {
+          call_back_fn(widget_object, widget_id, this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchEnd, x, y);
+        } else {
+          log('list_view_data.on_message() call_back_fn == false', 2);
         }
         break;
       default:

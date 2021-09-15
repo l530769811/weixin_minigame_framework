@@ -4,7 +4,10 @@ import log from '../log.js'
 import {
   Listen_Type
 } from '../scene_manager.js'
-
+import {
+  draw_rect
+} from '../draw/draw.js'
+import scene_manager from '../scene_manager.js'
 
 const _widget_type_symbol = {
   widget_type_symbol: Symbol('widget_type_symbol')
@@ -46,6 +49,10 @@ const _out_canvas_symbol = {
   variate: Symbol('out_canvas')
 }
 
+const widget_id_symbol = {
+  variate: Symbol('widget_id_symbol')
+}
+
 var WIDGET_TOUCH_EVENT = {
   WTE_None: -1,
   WTE_TouchStart: 0,
@@ -60,9 +67,21 @@ export {
   WIDGET_TOUCH_EVENT
 }
 
+var global_widget_id = 0;
+
 export default class widget extends duty_unit {
-  constructor(name, parentLayer, site) {
+  constructor(name, parentLayer, site, widget_id = 0) {
     super(name, parentLayer, site)
+
+    log('widget.constructor() global_widget_id = ' + global_widget_id, 1);
+    this[widget_id_symbol.variate] = 0;
+    if (widget_id <= 0) {
+      global_widget_id++;
+    } else {
+      global_widget_id = widget_id;
+    }
+    this[widget_id_symbol.variate] = global_widget_id;
+
 
     this[_background_canvas_symbol.background_canvas_symbol] = wx.createCanvas();
     this[_canvas_context_symbol.canvas_context_symbol] = this[_background_canvas_symbol.background_canvas_symbol].getContext('2d');
@@ -74,22 +93,30 @@ export default class widget extends duty_unit {
       src_h: 0
     };
     this[_text_symbol.text_symbol] = '';
-   
-    if (!site) {;
+
+    if (!site) {
+      ;
     } else {
-      log('widget.constructor name = ' + this.get_name() + ' site = ' + site);
-      this.set_rander_zone(site.x, site.y, site.w, site.h);
+      log('widget.constructor name = ' + this.get_name() + ' site = ' + site, 1);
+      this.set_widget_zone(site.x, site.y, site.w, site.h);
     }
 
     this[_reference_render_zone_symbol.reference_render_zone_symbol] = null;
     this[_canvas_render_zone_symbol.canvas_render_zone_symbol] = null;
     this[_out_canvas_symbol.variate] = false;
     if ((!parentLayer == false) && (parentLayer instanceof widget)) {
-      this[_reference_render_zone_symbol.reference_render_zone_symbol] = parentLayer.get_render_zone();
       this[_canvas_render_zone_symbol.canvas_render_zone_symbol] = parentLayer.get_render_zone();
     } else {
       log('widget.constructor() parent is no a widget', 2);
     }
+  }
+
+  get_context(){
+    return this[_canvas_context_symbol.canvas_context_symbol];
+  }
+
+  get_widget_id() {
+    return this[widget_id_symbol.variate];
   }
 
   _is_out_canvas() {
@@ -112,8 +139,8 @@ export default class widget extends duty_unit {
       if (!!(((min_x >= canvas_min_x && min_x <= canvas_max_x) || (canvas_min_x >= min_x && canvas_min_x <= max_x)) &&
           ((min_y >= canvas_min_y && min_y <= canvas_max_y) || (canvas_min_y >= min_y && canvas_min_y <= max_y)))) {
         ret_is_out = false;
-      } else {        
-        ret_is_out = true;      
+      } else {
+        ret_is_out = true;
       }
     }
 
@@ -141,7 +168,6 @@ export default class widget extends duty_unit {
     this[_canvas_context_symbol.canvas_context_symbol].globalAlpha = 0.4;
     let _data = this.get_data();
     _data.invalid();
-
   }
 
   valid() {
@@ -157,19 +183,34 @@ export default class widget extends duty_unit {
     return _data.isValid();
   }
 
+  diplayNotify(type){
+    let  objs = []
+    let parent = this.get_parent();
+    objs[0] = this;
+    objs[1] = parent;
+    let i = 0;
+    this.listeners.forEach.bind(this);
+    let func = function(value, index, array) {
+      value.notify(type, objs);
+    };
+    let f = func.bind(this);
+    this.listeners.forEach(f);
+  }
+
   hide() {
     let _data = this.get_data();
     _data.hide();
-
+    
     log(this.get_name() + ' widget hide', 0);
-    this.notify(Listen_Type.LTP_invalid_scene);
+    this.diplayNotify(Listen_Type.LTP_display_hide);
   }
 
   show() {
     let _data = this.get_data();
     _data.show();
+
     log(this.get_name() + ' widget show', 0);
-    this.notify(Listen_Type.LTP_valid_scene);
+    this.diplayNotify(Listen_Type.LTP_display_show);
   }
 
   isVisible() {
@@ -181,11 +222,12 @@ export default class widget extends duty_unit {
     return new widget_data(name, arg);
   }
 
-  on_move_widget(x, y, w, h) {;
+  on_move_widget(x, y, w, h) {
+    ;
   }
 
   move_widget(x, y, w, h) {
-    this.set_rander_zone(x, y, w, h);
+    this.set_widget_zone(x, y, w, h);
     this.on_move_widget(x, y, w, h);
   }
 
@@ -230,14 +272,13 @@ export default class widget extends duty_unit {
 
     let _parent_zone = null;
     if (!this[_reference_render_zone_symbol.reference_render_zone_symbol] == false) {
-      _parent_zone = this[_reference_render_zone_symbol.reference_render_zone_symbol];
+      _parent_zone = this[_reference_render_zone_symbol.reference_render_zone_symbol].get_render_zone();;
     } else {
-
       let _parent = this.get_parent();
       if (!_parent == false && (_parent instanceof widget)) {
         _parent_zone = _parent.get_render_zone();
-
-      } else {; // log('widget.get_render_zone() _parent null or not is widget_+_+_+_+_+_ name ='+ this.get_name() + ' _parent = ' + _parent, 2);
+      } else {
+        ; // log('widget.get_render_zone() _parent null or not is widget_+_+_+_+_+_ name ='+ this.get_name() + ' _parent = ' + _parent, 2);
       }
     }
 
@@ -249,7 +290,7 @@ export default class widget extends duty_unit {
     return ret;
   }
 
-  set_rander_zone(x, y, w, h) {
+  set_widget_zone(x, y, w, h) {
     let _data_ = this.get_data();
     _data_.move_widget(x, y, w, h);
   }
@@ -284,52 +325,58 @@ export default class widget extends duty_unit {
     return this[_canvas_context_symbol.canvas_context_symbol];
   }
 
-  draw_background(ctx, us_timestamp, _zone) {;
+  draw_background(ctx, us_timestamp, _zone) {
+    let zone = this.get_render_zone();
+    let _image = this.get_image();
+    if (_image.image == null) {
+      let _data = this.get_data();
+      let background_color = _data.get_background_color();
+      draw_rect(ctx,
+        zone.x, zone.y,
+        zone.x + zone.w, zone.y + zone.h, background_color, 2, true);
+    } else {
+      ctx.drawImage(_image.image,
+        _image.src_x, _image.src_y, _image.src_w, _image.src_h,
+        zone_tmp.x, zone_tmp.y, zone_tmp.w, zone_tmp.h);
+    }
   }
 
-  draw_text(ctx, us_timestamp, _zone) {;
+  draw_text(ctx, us_timestamp, _zone) {
+    ;
   }
 
   draw_other(ctx, us_timestamp, _zone) {
-
+    ;
   }
 
-  push_render_animation(name, animation) {
+  push_render_animation(animation) {
     let _data = this.get_data();
-    _data.push_render_animation(name, animation);
+    _data.push_render_animation(animation);
   }
 
 
   draw_animation(ctx, us_timestamp, _zone) {
     let _data = this.get_data();
     let animations = _data.get_all_animation();
-
-    for (var name in animations) {
-      if (_data.render_animation_is_empty(name) == false) {
-
-        let _animation = _data.front_render_animation(name);
-
-        if ((!_animation) == false) {
-          _animation.duty(ctx, us_timestamp, _zone);
-          if (_animation.is_playing() == false) {
-            // log('widget.draw_animation pop animation____+++++++++++++_________', 1);
-            _data.pop_render_animation(name);
-          }
-        }
-      }
-    }
+    if(!animations==false){
+      animations.duty(ctx, us_timestamp);
+    }   
   }
 
   clear_canves(_zone) {
-
     this[_canvas_context_symbol.canvas_context_symbol].clearRect(_zone.x, _zone.y, _zone.w, _zone.h)
   }
 
 
   duty(arg, us_timestamp) {
-
     if (this._is_out_canvas() == true) {
-      return;
+     return;
+    }
+    let _parent = this.get_parent();
+    if(!_parent==false && (_parent instanceof widget) ){
+      if(this.isVisible() == false) {
+        return;
+      }
     }
 
     if (this.isVisible() == true) {
@@ -351,26 +398,40 @@ export default class widget extends duty_unit {
       }
       this.draw_text(this[_canvas_context_symbol.canvas_context_symbol], us_timestamp, text_zone);
       this.draw_animation(this[_canvas_context_symbol.canvas_context_symbol], us_timestamp, _zone);
-      this.render(arg, us_timestamp, _zone);
+      let parent = this.get_parent();
+      let ctxs = arg;
+     // if(!parent == false){
+        //  ctxs = parent.get_context()
+     // } 
+      this.render(ctxs, us_timestamp, _zone);
     }
   }
 
-
   render(ctx, us_timestamp, _zone) {
-
-    this.draw_other(this[_canvas_context_symbol.canvas_context_symbol], us_timestamp, _zone);
+     this.draw_other(this[_canvas_context_symbol.canvas_context_symbol], us_timestamp, _zone);
     ctx.drawImage(this[_background_canvas_symbol.background_canvas_symbol],
       _zone.x, _zone.y, _zone.w, _zone.h,
       _zone.x, _zone.y, _zone.w, _zone.h);
   }
 
+  get_scene_manager() {
+    let _parent = this.get_parent();
+    let _ret = null
+    if (_parent instanceof scene_manager) {
+      _ret = _parent;
+    } else {
+      if (!_parent == false) {
+        _parent = _parent.get_parent();
+      }
+    }
+    return _ret;
+  }
+
   on_touch_input(e, old_e) {
     let ret = false;
-
     if (this.isValid() == false) {
       return ret;
     }
-
     if (this.isVisible() == false) {
       return ret;
     }

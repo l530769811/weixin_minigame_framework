@@ -2,9 +2,14 @@ const _ui_data_symbol = {
   variate: Symbol('ui_data_symbnol')
 }
 
+const _is_load_symbol = {
+  variate: Symbol('is_load_symbol')
+}
+
 export default class widget_adapter {
   constructor() {
     this[_ui_data_symbol.variate] = null;
+    this[_is_load_symbol.variate] = [];
   }
 
   upload_widget(object, widget_index) {
@@ -17,7 +22,13 @@ export default class widget_adapter {
   }
 
   is_upload(widget_index){
-    return false;
+    let ret = false;
+    if (!this[_is_load_symbol.variate][widget_index]){
+      this[_is_load_symbol.variate][widget_index] = true;
+    } else {
+      ret = this[_is_load_symbol.variate][widget_index];
+    }
+    return ret;
   }
 
   set_ui_data(data) {
@@ -34,7 +45,7 @@ export default class widget_adapter {
   }
 
   instance_widget(object, widget_index) {
-    return null;
+    ;
   }
 
   destory_widget(object, widget_index) {

@@ -39,7 +39,7 @@ export default class button_data extends widget_data {
   update_data(update_case) {;
   }
 
-  on_message(id, kind, touch_x, touch_y) {
+  on_message(widget_object, widget_id, name, kind, touch_x, touch_y) {
     let offset_x = 20;
     let offset_y = 10;
     let call_back_fn = this.get_onclik_callback();
@@ -70,7 +70,7 @@ export default class button_data extends widget_data {
           this[_render_src_zone_symbol.render_src_zone_symbol].h
         ); 
         if ((!call_back_fn) == false) {
-          call_back_fn(this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchStart);
+          call_back_fn(widget_object, widget_id, this.get_name(), WIDGET_TOUCH_EVENT.WTE_TouchStart);
         } else {
           log('button_data.on_message() call_back_fn is null or undefined kind = ' + WIDGET_TOUCH_EVENT.WTE_TouchStart);
         }

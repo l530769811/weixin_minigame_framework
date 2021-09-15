@@ -23,9 +23,7 @@ export default class js_queue{
      return (this[_queue_symbol.queue_symbol].length<=0);
   }
   
-  length(){
-    
+  length(){    
     return this[_queue_symbol.queue_symbol].length;
-  }
-   
+  }   
 }

@@ -49,15 +49,15 @@ export default class scroll_bar extends widget_data {
     this[_scroller_symbol.scroller_symbol].set_has_scroll_range(distance);
   }
 
-  get_total_scroll_range(distance) {
+  get_total_scroll_range() {
     return this[_scroller_symbol.scroller_symbol].get_total_scroll_range();
   }
 
-  get_no_need_scroll_range(distance) {
+  get_no_need_scroll_range() {
     return this[_scroller_symbol.scroller_symbol].get_no_need_scroll_range();
   }
 
-  get_has_scroll_range(distance) {
+  get_has_scroll_range() {
     return this[_scroller_symbol.scroller_symbol].get_has_scroll_range();
   }
 
@@ -72,7 +72,7 @@ export default class scroll_bar extends widget_data {
       let call_back = this._scroll_to.bind(this);
       let tempete_frames = new number_increase_gradient_frames(call_back, ret.scroll_distance);
       let temp_animation = new number_increase_gradient_animation('scroll_bar_scrolling', ret.scroll_distance, tempete_frames);
-      this.push_render_animation('scroll_bar_scrolling', temp_animation);
+      this.push_render_animation(temp_animation);
       
       let fn = this.get_onscroll_callback();
       if (typeof fn == 'function') {

@@ -14,7 +14,7 @@ import js_queue from '../common/js_queue.js'
 import scroller from '../common/scroller.js'
 import coordinate_increase_gradient_animation from './animation/coordinate_increase_gradient_animation.js'
 import coordinate_gradient_frames from './animation/coordinate_gradient_frames.js'
-import empty_layer from './empty_layer.js'
+import empty_widget from './empty_widget.js'
 
 var LIST_ITEM_ALIGN = {
   LIA_Hor: 0,
@@ -62,8 +62,8 @@ const _item_widget_groub_symbol = {
 }
 
 export default class list_view extends layer {
-  constructor(name, parentDuty, site, item_align = LIST_ITEM_ALIGN.LIA_Ver) {
-    super(name, parentDuty, site);
+  constructor(name, parentDuty, site, item_align = LIST_ITEM_ALIGN.LIA_Ver, widget_id) {
+    super(name, parentDuty, site, widget_id);
     // this[_render_animation_symbol.render_animation_symbol] = new js_queue();
     let _data = this.get_data();
     _data.set_item_align(item_align)
@@ -81,12 +81,8 @@ export default class list_view extends layer {
     let fn_scroll_bar_message = this.on_scroll_bar_message.bind(this);
     this[_scroll_bar_symbol.scroll_bar_symbol].set_onscroll_callback(fn_scroll_bar_message);
 
-    this[_item_widget_groub_symbol.item_widget_groub_symbol] = {
-      x: site.x,
-      y: site.y,
-      w: site.w,
-      h: site.h
-    };
+    this[_item_widget_groub_symbol.item_widget_groub_symbol] = new empty_widget(name, null, site);
+    this[_item_widget_groub_symbol.item_widget_groub_symbol].set_reference_render_zone(this);
 
     this[_scroller_symbol.scroller_symbol] = new scroller();
     this.reset_scroll_range();
@@ -96,14 +92,22 @@ export default class list_view extends layer {
       ver: 3
     };
     this._reset_next_item_site();
-  
+
     let fun = this.on_move.bind(this);
 
     _data.set_onmove_callback(fun);
     _data.set_item_size(40, 40);
+
+    let _row = this.get_row_count();
+    let _col = this.get_col_count();
+    _data.set_render_row_col(0, _row, 0, _col);
+    this.last_touch_point = {
+      x: undefined,
+      y: undefined
+    };
   }
 
-  init_for_adapter(){
+  init_for_adapter() {
     let _max_loading_widget = this.calculate_max_item_count();
     let _count = this.get_count();
     _max_loading_widget = (_count > _max_loading_widget) ? _max_loading_widget : _count;
@@ -111,6 +115,14 @@ export default class list_view extends layer {
       log('list_view.init_for_adapter() push_loading_widget_index = ' + i + ' _max_loading_widget = ' + _max_loading_widget, 1);
       this.push_loading_widget_index(i);
     }
+
+    let _data = this.get_data();
+    let _row_count = this.get_row_count();
+    let _col_count = this.get_col_count();
+
+    let _row = (_row_count > 0) ? (_row_count) : 0;
+    let _col = (_col_count > 0) ? (_col_count) : 0;
+    _data.set_render_row_col(0, _row, 0, _col);
   }
 
   on_scroll_bar_message(x, kind) {
@@ -167,6 +179,19 @@ export default class list_view extends layer {
     _data.set_item_selection(selection);
   }
 
+  get_total_row_count() {
+    let ret_count = 0;
+    let _data = this.get_data();
+    let _count = this.get_count();
+    let _col = this.get_col_count();
+    log('list_view.get_total_row_count() total_count = ' + Math.ceil(_count / _col), 1);
+    return Math.ceil(_count / _col);
+  }
+
+  get_total_col_count() {
+    return this.get_col_count();
+  }
+
   get_row_count() {
     let ret_count = 0;
     let _data = this.get_data();
@@ -197,7 +222,6 @@ export default class list_view extends layer {
         break;
     }
 
-
     return ret_count;
   }
 
@@ -219,6 +243,7 @@ export default class list_view extends layer {
     let item_size = _data.get_item_size();
     let item_colum_count = 0;
     let _item_row_count = 0
+
     switch (item_align) {
       case LIST_ITEM_ALIGN.LIA_Hor:
         item_colum_count = Math.floor((_zone.w - this[_widget_frame_size_symbol.widget_frame_size_symbol] * 2) / (item_size.w));
@@ -278,11 +303,17 @@ export default class list_view extends layer {
     }
   }
 
-  calculate_render_row_col(item_index){
+  calculate_item_row(item_index) {
+
     let row_count = this.get_row_count();
     let col_count = this.get_col_count();
-;
+    return Math.floor(item_index / row_count)
+  }
 
+  calculate_item_col(item_index) {
+    let row_count = this.get_row_count();
+    let col_count = this.get_col_count();
+    return Math.floor(item_index - (Math.floor(item_index / row_count) * col_count))
   }
 
   get_item_count() {
@@ -366,8 +397,8 @@ export default class list_view extends layer {
         default:
           break;
       }
-
-      this.add_duty(item.get_name(), item);
+      let ret = this.add_duty(item.get_name(), item);
+   
       item.move_widget(_x, _y, _w, _h);
       if (!this[_item_widget_groub_symbol.item_widget_groub_symbol] == false) {
         item.set_reference_render_zone(this[_item_widget_groub_symbol.item_widget_groub_symbol]);
@@ -383,15 +414,12 @@ export default class list_view extends layer {
   }
 
   on_move_widget(x, y, w, h) {
-    this[_item_widget_groub_symbol.item_widget_groub_symbol].x = x;
-    this[_item_widget_groub_symbol.item_widget_groub_symbol].y = y;
-    this[_item_widget_groub_symbol.item_widget_groub_symbol].w = w;
-    this[_item_widget_groub_symbol.item_widget_groub_symbol].h = h;
+    this[_item_widget_groub_symbol.item_widget_groub_symbol].move_widget(x, y, w, h);
     this.reset_scroll_range();
-    this.remove_all_item_site();
+    this.reset_all_item_site();
   }
 
-  remove_all_item_site() {
+  reset_all_item_site() {
     let items = this.get_duty(null);
     let _w = 0;
     let _h = 0;
@@ -430,44 +458,19 @@ export default class list_view extends layer {
         };
 
         items[i].move_widget(_render_zone.x, _render_zone.y, _render_zone.w, _render_zone.h);
-        // let list_view_render_zone = this.get_render_zone();
-        // if (((_render_zone.y) >= (list_view_render_zone.y + list_view_render_zone.h)) ||
-        //   ((_render_zone.y + _render_zone.h) <= (list_view_render_zone.y))) {
-        //   if (items[i].isVisible() == true) {
-        //     items[i].hide();
-        //   }
-        // } else {
-        //   if (items[i].isVisible() == false) {
-        //     items[i].show();
-        //   }
-        // }
+
       }
     }
 
+    let _row = this.get_row_count();
+    let _col = this.get_col_count();
+    let __data = this.get_data();
+    __data.set_render_row_col(0, _row, 0, _col);
+
   }
   _move_all_item(x, y) {
-
-    this[_item_widget_groub_symbol.item_widget_groub_symbol].x = this[_item_widget_groub_symbol.item_widget_groub_symbol].x + x;
-    this[_item_widget_groub_symbol.item_widget_groub_symbol].y = this[_item_widget_groub_symbol.item_widget_groub_symbol].y + y;
-
-    // let items = this.get_duty(null);
-    // for (var i in items) {
-    //   if (items[i] instanceof item) {
-    //     let _render_zone = items[i].get_widget_zone();
-    //     items[i].move_widget(_render_zone.x + x, _render_zone.y + y, _render_zone.w, _render_zone.h);
-    //     // let list_view_render_zone = this.get_render_zone();
-    //     // if (((_render_zone.y + y) > (list_view_render_zone.y + list_view_render_zone.h)) ||
-    //     //   ((_render_zone.y + y + _render_zone.h) < (list_view_render_zone.y))) {
-    //     //   if (items[i].isVisible() == true) {
-    //     //     items[i].hide();
-    //     //   }
-    //     // } else {
-    //     //   if (items[i].isVisible() == false) {
-    //     //     items[i].show();
-    //     //   }
-    //     // }
-    //   }
-    // }
+    let _widget_zone = this[_item_widget_groub_symbol.item_widget_groub_symbol].get_widget_zone();
+    this[_item_widget_groub_symbol.item_widget_groub_symbol].move_widget(_widget_zone.x + x, _widget_zone.y + y, _widget_zone.w, _widget_zone.h);
   }
 
   move_all_item(_x, _y) {
@@ -479,7 +482,6 @@ export default class list_view extends layer {
     } else {
       _y = scroll_info.scroll_distance;
     }
-
 
     let func = this._move_all_item.bind(this);
     let frames = new coordinate_gradient_frames(func, 0, 0);
@@ -493,10 +495,39 @@ export default class list_view extends layer {
     }
     log('list_view.move_all_item(_x, _y) -y = ' + end_coordinate.y, 1);
     let animation = new coordinate_increase_gradient_animation('tmp_animation', start_coordinate, end_coordinate, frames);
-    this.push_render_animation('scroll_to_move_item', animation)
+    this.push_render_animation(animation)
 
-    // this[_next_item_site_symbol.next_item_site].x = this[_next_item_site_symbol.next_item_site].x + _x;
-    // this[_next_item_site_symbol.next_item_site].y = this[_next_item_site_symbol.next_item_site].y + _y;
+    let _total = this[_scroller_symbol.scroller_symbol].get_total_scroll_range();
+    let _no_need = this[_scroller_symbol.scroller_symbol].get_no_need_scroll_range();
+    let _scroll = this[_scroller_symbol.scroller_symbol].get_has_scroll_range();
+
+    let _total_col = this.get_total_col_count();
+    let _total_row = this.get_total_row_count();
+    let _cur_row = Math.ceil((_scroll / _total) * _total_row);
+    if (_y < 0) {
+      _cur_row = Math.ceil((_scroll / _total) * _total_row)
+    } else {
+      _cur_row = Math.floor((_scroll / _total) * _total_row)
+    }
+    _cur_row = (_cur_row > (_total_row - 1)) ? (_total_row - 1) : _cur_row;
+
+
+    let _data = this.get_data();
+    let _render_row_col = _data.get_render_row_col();
+    log('list_view.move_all_item() _render_row_col.min_row = ' + _render_row_col.min_row + ' _render_row_col.max_row = ' + _render_row_col.max_row + ' _______Y = ' + _y, 1)
+    let _differ_row = _cur_row - _render_row_col.max_row;
+    let _col_count = this.get_col_count();
+    let _load_min_index = (_render_row_col.max_row) * _col_count;
+    let _load_max_index = _cur_row * _col_count + _col_count - 1;
+    for (var i = _load_min_index; i <= _load_max_index; i++) {
+      this.push_loading_widget_index(i);
+    }
+
+    _render_row_col.min_row = _render_row_col.min_row + _differ_row;
+    _render_row_col.max_row = _render_row_col.max_row + _differ_row;
+    let _row_col = _data.get_render_row_col();
+    log('list_view.move_all_item() _row_col.min_row = ' + _row_col.min_row + ' _row_col.max_row = ' + _row_col.max_row, 1)
+
   }
 
   _reset_next_item_site() {
@@ -506,19 +537,13 @@ export default class list_view extends layer {
       x: (0 + this[_widget_frame_size_symbol.widget_frame_size_symbol]),
       y: (0 + this[_widget_frame_size_symbol.widget_frame_size_symbol])
     }
-
   }
 
   set_item_size(w, h) {
     let _data = this.get_data();
     _data.set_item_size(w, h);
-    this.remove_all_item_site();
+    this.reset_all_item_site();
   }
-
-  // bind_parent_callback() {
-  //   let fn = this.on_item_changechecked.bind(this);
-  //   return fn;
-  // }
 
   on_item_changechecked(name, check) {
     let _data = this.get_data();
@@ -557,33 +582,33 @@ export default class list_view extends layer {
     }
   }
 
-  on_move(name, kind, _x, _y) {
+  on_move(widget_object, widget_id, name, kind, _x, _y) {
+
     switch (name) {
-      case 'this.get_name()':
-        break;
-      default:
+      case this.get_name():
         if (kind == WIDGET_TOUCH_EVENT.WTE_TouchStart) {
           this.last_touch_point = {
             x: _x,
             y: _y
           };
         } else if (kind == WIDGET_TOUCH_EVENT.WTE_TouchMoving) {
-          let hor_move = (_x - this.last_touch_point.x) < 0 ? -(_x - this.last_touch_point.x) : (_x - this.last_touch_point.x);
-          let ver_move = (_y - this.last_touch_point.y) < 0 ? -(_y - this.last_touch_point.y) : (_y - this.last_touch_point.y);
-          let l = 0.0
-          if (hor_move != 0) {
-            l = ver_move / hor_move;
-          } else {
-            l = 3.14 / 2;
-          }
+          if (this.last_touch_point.x != undefined && this.last_touch_point.x != undefined) {
+            let hor_move = (_x - this.last_touch_point.x) < 0 ? -(_x - this.last_touch_point.x) : (_x - this.last_touch_point.x);
+            let ver_move = (_y - this.last_touch_point.y) < 0 ? -(_y - this.last_touch_point.y) : (_y - this.last_touch_point.y);
+            let l = 0.0
+            if (hor_move != 0) {
+              l = ver_move / hor_move;
+            } else {
+              l = 3.14 / 2;
+            }
 
 
-          if (l > 1.0) {
-            let move_distance = Math.ceil((_y - this.last_touch_point.y));
-            this[_scroll_bar_symbol.scroll_bar_symbol].scroll_to(move_distance);
-            //this.move_all_item(0, move_distance);
-          } else {
-            //mean touch move left or right
+            if (l > 1.0) {
+              let move_distance = Math.ceil((_y - this.last_touch_point.y));
+              this[_scroll_bar_symbol.scroll_bar_symbol].scroll_to(move_distance);
+            } else {
+              //mean touch move left or right
+            }
           }
           this.last_touch_point = {
             x: _x,
@@ -591,30 +616,13 @@ export default class list_view extends layer {
           };
         }
         break;
+      default:
+        break;
     }
-  }
-
-  draw_background(ctx, us_timestamp) {
-    let zone = this.get_render_zone();
-    let _image = this.get_image();
-    if (_image.image == null) {
-      let _data = this.get_data();
-      let background_color = _data.get_background_color();
-      draw_rect(ctx,
-        zone.x, zone.y,
-        zone.x + zone.w, zone.y + zone.h, background_color, 2);
-    } else {
-      ctx.drawImage(_image.image,
-        _image.src_x, _image.src_y, _image.src_w, _image.src_h,
-        zone_tmp.x, zone_tmp.y, zone_tmp.w, zone_tmp.h);
-    }
-  }
-
-  draw_text(ctx, us_timestamp) {;
   }
 
   draw_other(ctx, us_timestamp, _zone) {
     super.draw_other(ctx, us_timestamp, _zone);
-    this[_scroll_bar_symbol.scroll_bar_symbol].duty(ctx, us_timestamp, _zone);
+    this[_scroll_bar_symbol.scroll_bar_symbol].duty(ctx, us_timestamp); 
   }
 }

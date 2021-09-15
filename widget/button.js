@@ -6,8 +6,8 @@ import {
 import { draw_circular_arc_rect } from '../draw/draw.js'
 import log from '../log.js'
 export default class button extends widget {
-  constructor(name, parentLayer, site) {
-    super(name, parentLayer, site);  
+  constructor(name, parentLayer, site, widget_id) {
+    super(name, parentLayer, site, widget_id);  
   }
 
   create_data(name, arg) {

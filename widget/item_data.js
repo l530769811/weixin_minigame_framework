@@ -33,13 +33,13 @@ export default class item_data extends button_data {
     this[_is_select_symbol.is_select_symbol] = false;
     this[_text_align_symbol.text_align_symbol] = ItemTextAlign.ITA_Hor;
     this[_text_Wrapped_symbol.text_Wrapped_symbol] = TtemTextWrapped.ITW_Left;
-    this[_set_check_for_callback_symbol.set_check_for_callback_symbol] = function(check) {
+    this[_set_check_for_callback_symbol.set_check_for_callback_symbol] = function (widget_object, widget_id, name, check) {
       let isChanged = !(this[_is_select_symbol.is_select_symbol] == check)
       this[_is_select_symbol.is_select_symbol] = check;
       if (isChanged) {
         let call_back_fn = this.get_onchangechecked_callback();
         if ((!call_back_fn) == false) {
-          call_back_fn(this.get_name(), this[_is_select_symbol.is_select_symbol]);
+          call_back_fn(widget_object, widget_id, this.get_name(), this[_is_select_symbol.is_select_symbol]);
         } else {
           log('item_data.setChecked call_back_fn is null===========');
         }
@@ -87,10 +87,10 @@ export default class item_data extends button_data {
     return this.get_messages_callback('onchangechecked');
   }
 
-  on_message(id, kind, x, y) {
+  on_message(widget_object, widget_id, name, kind, x, y) {
     switch (kind) {
       case WIDGET_TOUCH_EVENT.WTE_TouchClick:
-        this[_set_check_for_callback_symbol.set_check_for_callback_symbol](!this[_is_select_symbol.is_select_symbol]);
+        this[_set_check_for_callback_symbol.set_check_for_callback_symbol](widget_object, widget_id, name, !this[_is_select_symbol.is_select_symbol]);
         break;
       default:
         break;

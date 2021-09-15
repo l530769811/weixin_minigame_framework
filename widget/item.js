@@ -24,8 +24,8 @@ export {
 };
 
 export default class item extends widget {
-  constructor(name, parentLayer, site) {
-    super(name, parentLayer, site);
+  constructor(name, parentLayer, site, widget_id) {
+    super(name, parentLayer, site, widget_id);
   }
 
 

@@ -1,7 +1,6 @@
-import animation from './animation.js'
 import log from '../../log.js'
-
 import coordinate_gradient_frames from './coordinate_gradient_frames.js'
+import queue_animation from './queue_animation.js'
 
 const _coordinate_range_symbol = {
   coordinate_range_symbol: Symbol('coordinate_range_symbol')
@@ -16,7 +15,7 @@ const _coordinate_frame_template_symbol = {
   coordinate_frame_template_symbol: Symbol('coordinate_frame_template_symbol')
 }
 
-export default class coordinate_move_gradient_animation extends animation {
+export default class coordinate_move_gradient_animation extends queue_animation {
   constructor(name, _start_coordinate, _end_coordinate, coordinate_frame_template) {
     let _start_coordinate_x = _start_coordinate.x;
     let _start_coordinate_y = _start_coordinate.y;
@@ -40,7 +39,7 @@ export default class coordinate_move_gradient_animation extends animation {
 
     //purpose the upsite code is calculate out the rames_count;
     log('coordinate_move_gradient_animation.构造 frames_count = ' + frames_count + ' coordinate_frame_interval = ' + coordinate_frame_interval);
-    super(name, undefined, frames_count, least_speed);
+    super(name, undefined, frames_count);
     if (!coordinate_frame_template) {
       this[_coordinate_frame_template_symbol.coordinate_frame_template_symbol] = new coordinate_gradient_frames(null, 0, 0);
     } else {
